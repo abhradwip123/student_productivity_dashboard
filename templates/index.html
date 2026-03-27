@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Productivity Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Student Productivity Dashboard</h1>
+
+        <div class="card">
+            <h2>Add Study Session</h2>
+            <form action="/add" method="POST">
+                <input type="text" name="subject" placeholder="Subject" required>
+                <input type="number" step="0.5" name="study_hours" placeholder="Study Hours" required>
+                <input type="date" name="study_date" required>
+                <input type="text" name="notes" placeholder="Notes (optional)">
+                <button type="submit">Add Session</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Total Study Hours</h2>
+            <p class="highlight">{{ total_hours }} hours</p>
+        </div>
+
+        <div class="card">
+            <h2>Subject-wise Study Hours</h2>
+            <ul>
+                {% for item in subject_data %}
+                    <li>{{ item.subject }} - {{ item.total }} hours</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Study Sessions</h2>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Subject</th>
+                    <th>Hours</th>
+                    <th>Date</th>
+                    <th>Notes</th>
+                </tr>
+                {% for session in sessions %}
+                <tr>
+                    <td>{{ session.id }}</td>
+                    <td>{{ session.subject }}</td>
+                    <td>{{ session.study_hours }}</td>
+                    <td>{{ session.study_date }}</td>
+                    <td>{{ session.notes }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</body>
+</html>
