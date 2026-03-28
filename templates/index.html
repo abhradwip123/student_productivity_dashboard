@@ -5,57 +5,198 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Productivity Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <div class="background-blur blur-one"></div>
+    <div class="background-blur blur-two"></div>
+
     <div class="container">
-        <h1>Student Productivity Dashboard</h1>
+        <header class="hero">
+            <div>
+                <p class="tag">Student Performance Tracker</p>
+                <h1>Student Productivity Dashboard</h1>
+                <p class="subtitle">
+                    Track your study sessions, analyze subject-wise focus, and visualize your learning progress beautifully.
+                </p>
+            </div>
+            <div class="hero-stats">
+                <div class="mini-card">
+                    <span>Total Hours</span>
+                    <strong>{{ total_hours }}</strong>
+                </div>
+                <div class="mini-card">
+                    <span>Subjects</span>
+                    <strong>{{ subject_data|length }}</strong>
+                </div>
+            </div>
+        </header>
 
-        <div class="card">
-            <h2>Add Study Session</h2>
-            <form action="/add" method="POST">
-                <input type="text" name="subject" placeholder="Subject" required>
-                <input type="number" step="0.5" name="study_hours" placeholder="Study Hours" required>
-                <input type="date" name="study_date" required>
-                <input type="text" name="notes" placeholder="Notes (optional)">
-                <button type="submit">Add Session</button>
-            </form>
-        </div>
+        <div class="grid-layout">
+            <div class="card form-card">
+                <h2>Add Study Session</h2>
+                <form action="/add" method="POST" class="study-form">
+                    <div class="form-grid">
+                        <input type="text" name="subject" placeholder="Subject" required>
+                        <input type="number" step="0.5" name="study_hours" placeholder="Study Hours" required>
+                        <input type="date" name="study_date" required>
+                        <input type="text" name="notes" placeholder="Notes (optional)">
+                    </div>
+                    <button type="submit">Add Session</button>
+                </form>
+            </div>
 
-        <div class="card">
-            <h2>Total Study Hours</h2>
-            <p class="highlight">{{ total_hours }} hours</p>
+            <div class="card summary-card">
+                <h2>Total Study Hours</h2>
+                <p class="big-number">{{ total_hours }} <span>hours</span></p>
+                <p class="muted">Keep logging sessions to build a stronger productivity trend.</p>
+            </div>
         </div>
 
         <div class="card">
             <h2>Subject-wise Study Hours</h2>
-            <ul>
+            <div class="chips">
                 {% for item in subject_data %}
-                    <li>{{ item.subject }} - {{ item.total }} hours</li>
+                    <div class="chip">
+                        <span class="chip-subject">{{ item.subject }}</span>
+                        <span class="chip-hours">{{ item.total }} hrs</span>
+                    </div>
                 {% endfor %}
-            </ul>
+            </div>
         </div>
 
         <div class="card">
-            <h2>Study Sessions</h2>
-            <table>
-                <tr>
-                    <th>ID</th>
-                    <th>Subject</th>
-                    <th>Hours</th>
-                    <th>Date</th>
-                    <th>Notes</th>
-                </tr>
-                {% for session in sessions %}
-                <tr>
-                    <td>{{ session.id }}</td>
-                    <td>{{ session.subject }}</td>
-                    <td>{{ session.study_hours }}</td>
-                    <td>{{ session.study_date }}</td>
-                    <td>{{ session.notes }}</td>
-                </tr>
-                {% endfor %}
-            </table>
+            <h2>Study Analytics</h2>
+            <div class="charts">
+                <div class="chart-box">
+                    <h3>Bar Chart</h3>
+                    <canvas id="studyChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Pie Chart</h3>
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card table-card">
+            <div class="table-header">
+                <h2>Study Sessions</h2>
+                <span class="table-badge">{{ sessions|length }} entries</span>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Subject</th>
+                            <th>Hours</th>
+                            <th>Date</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in sessions %}
+                        <tr>
+                            <td>{{ session.id }}</td>
+                            <td>{{ session.subject }}</td>
+                            <td>{{ session.study_hours }}</td>
+                            <td>{{ session.study_date }}</td>
+                            <td>{{ session.notes }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
+    <script>
+        const subjectLabels = {{ subject_data | map(attribute='subject') | list | tojson }};
+        const subjectHours = {{ subject_data | map(attribute='total') | list | tojson }};
+
+        const colors = [
+            '#8b5cf6',
+            '#06b6d4',
+            '#22c55e',
+            '#f59e0b',
+            '#ec4899',
+            '#ef4444',
+            '#3b82f6'
+        ];
+
+        const barCtx = document.getElementById('studyChart').getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: subjectLabels,
+                datasets: [{
+                    label: 'Study Hours',
+                    data: subjectHours,
+                    backgroundColor: colors,
+                    borderRadius: 10,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e5e7eb'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#cbd5e1'
+                        },
+                        grid: {
+                            color: 'rgba(255,255,255,0.08)'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#cbd5e1'
+                        },
+                        grid: {
+                            color: 'rgba(255,255,255,0.08)'
+                        }
+                    }
+                }
+            }
+        });
+
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: subjectLabels,
+                datasets: [{
+                    data: subjectHours,
+                    backgroundColor: colors,
+                    borderColor: '#111827',
+                    borderWidth: 3,
+                    hoverOffset: 12
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '55%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#e5e7eb',
+                            padding: 18
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
